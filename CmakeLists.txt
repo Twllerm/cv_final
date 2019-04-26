@@ -1,0 +1,29 @@
+cmake_minimum_required(VERSION 3.0)
+
+project(final)
+
+set (OpenCV_DIR ~/Desktop/installation/OpenCV-master/share/OpenCV)
+set (SOURCE src/main.cpp)
+
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+add_executable(${PROJECT_NAME} ${SOURCE})
+
+set_target_properties(final
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "build"
+)
+
+target_link_libraries(final ${OpenCV_LIBS})
+
+add_custom_target(copy-runtime-files ALL
+    COMMAND cmake -E copy_directory 
+    ./src/data ./build/data DEPENDS final)
+
+add_custom_target(run_final)
+
+add_custom_command(TARGET run_final
+        POST_BUILD
+        COMMAND cd build/ && ./final
+        )
