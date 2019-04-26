@@ -23,24 +23,6 @@ int k = 10;
 Mat image;
 Mat image_substracted ;
 
-
-void drawHist(const vector<int>& data, Mat& dst, int binSize, int height, Scalar color1, Scalar color2)
-{
-    int max_value = *max_element(data.begin(), data.end());
-    int rows = height + 20;
-    int cols = 0;
-    
-    cols = data.size() * binSize;
-    dst = Mat3b(rows, cols, Vec3b(0,0,0));
-
-    for (int i = 0; i < data.size(); ++i)
-    {
-       int h = height -  (height*data[i])/max_value;
-       rectangle(dst, Point(i*binSize, h), Point((i + 1)*binSize-1, rows), (i%2) ? color1 : color2, CV_FILLED);
-    }
-
-}
-
 double evaluate_vW(Mat image) {
     double result = 0;
 
