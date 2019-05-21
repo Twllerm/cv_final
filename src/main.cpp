@@ -7,6 +7,7 @@
 #include "opencv2/highgui.hpp"
 #include "shade_substraction.cpp"
 #include "grayscale_transformations.cpp"
+#include "otsu.cpp"
 #include <iostream>
 
 using std::cin;
@@ -18,10 +19,11 @@ using std::map;
 using std::endl;
 using namespace cv;
 
+int otsu_thr;
 int thr = 150; 
 int k = 10; 
 Mat image;
-Mat image_substracted ;
+Mat image_substracted;
 
 double evaluate_vW(Mat image) {
     double result = 0;
@@ -73,7 +75,22 @@ void show_result(Mat image, String title, double threshold, double vW, double (*
 
     hconcat(image, new_image, result);
 
-    imshow(title, new_image);
+    imwrite("./" + title + ".png", new_image);
+
+     vector <int> hist = calculateHist(image);
+     vector <int> gr;
+
+    for (int i = 0; i < hist.size(); ++i) {
+        gr.push_back(tranform_func(hist[i], thr, vW));
+    }
+
+
+    int range[2] = {0, 100};
+
+    Mat lineGraph = plotGraph(gr, range);
+    Mat lineGraph2 = Scalar::all(255) - lineGraph;
+    imwrite("./" + title + "graph.png", lineGraph2);
+    
 }
 
 void on_trackbar(int, void*) {
@@ -91,7 +108,9 @@ void on_trackbar(int, void*) {
 }
 
 void on_trackbar_k(int, void*) {
-    image_substracted = substract_shades(image, k);
+    image_substracted = substract_shades_2(image, k);
+
+    imwrite("Substracted.jpg", image_substracted);
 
     double vW_substracted = evaluate_vW(image_substracted);
     show_result(image_substracted, "Local thresholding via shade substraction", thr, vW_substracted, normal_transofrm);
@@ -101,7 +120,28 @@ void on_trackbar_k(int, void*) {
 void create_GUI() {
     namedWindow("Parameters", 1);
 
-    imshow("Original", image);
+    imwrite("./Original.png", image);
+
+    // draw hist
+    Mat graph;
+    vector <int> hist = calculateHist(image);
+    drawHist(hist, graph);
+
+    Mat graphinv = Scalar::all(255) - graph;
+    imwrite("./hist.png", graphinv);
+    
+    vector <int> gr;
+    double vW = evaluate_vW(image);
+
+    for (int i = 0; i < hist.size(); ++i) {
+        gr.push_back(uniform_transofrm(hist[i], thr, vW));
+    }
+
+
+    int range[2] = {0, 100};
+
+    Mat lineGraph = plotGraph(gr, range);
+   
 
     createTrackbar("threshold", "Parameters", &thr, 255, on_trackbar);
     createTrackbar("k for shade substraction", "Parameters", &k, 100, on_trackbar_k);
@@ -111,7 +151,7 @@ void create_GUI() {
 int main(int argc, char** argv)
 {
 
-    Mat raw = imread("./data/test.jpg");
+    Mat raw = imread("./data/kek.png");
     resize(raw, image, Size(200, 200), 0, 0, INTER_CUBIC);
     
     void *ptr;
@@ -123,8 +163,16 @@ int main(int argc, char** argv)
       return -1;
     }
 
+    thr = otsuThreshold(image);
+
+    cout <<  thr  << endl;
+
     create_GUI();
 
+    waitKey();
+    waitKey();
+    waitKey();
+    waitKey();
     waitKey();
     waitKey();
     return 0;
